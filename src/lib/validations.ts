@@ -3,13 +3,13 @@ import { z } from "zod";
 /** Shared input schemas. Every public endpoint and form validates against one
  *  of these, with explicit length bounds to keep payloads sane. */
 
-export const checkoutSchema = z.object({
-  // Optional — used to pre-fill the hosted checkout. Lemon Squeezy remains the
-  // source of truth for the real billing email.
-  email: z.string().trim().email().max(254).optional(),
-  // Optional discount / variant override (server re-validates against config).
-  variantId: z.string().trim().max(64).optional(),
-});
+export const checkoutSchema = z
+  .object({
+    // Optional — used to pre-fill the hosted checkout. Lemon Squeezy remains the
+    // source of truth for the real billing email.
+    email: z.string().trim().email().max(254).optional(),
+  })
+  .strict();
 export type CheckoutInput = z.infer<typeof checkoutSchema>;
 
 export const contactSchema = z.object({
@@ -29,8 +29,9 @@ export type ContactInput = z.infer<typeof contactSchema>;
 
 export const licenseValidateSchema = z.object({
   key: z.string().trim().min(8).max(64),
-  // Optional machine fingerprint from the desktop app.
-  instanceId: z.string().trim().max(128).optional(),
+  // Machine fingerprint from the desktop app. Required so activation limits
+  // cannot be bypassed by omitting device identity.
+  instanceId: z.string().trim().min(1).max(128),
   instanceName: z.string().trim().max(128).optional(),
 });
 export type LicenseValidateInput = z.infer<typeof licenseValidateSchema>;

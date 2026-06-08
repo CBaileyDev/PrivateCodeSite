@@ -7,9 +7,8 @@ Quick triage for the most common production issues.
 1. `GET /api/health` → confirm `payments`, `webhooks`, `email`, `database` are
    `true`.
 2. In the DB, look for the order: `select * from orders where email = '...'`.
-   - **Order exists, license exists** → email delivery issue. Check Resend logs;
-     re-send from the customer's `/dashboard` (the masked key is shown there;
-     the plaintext was only in the original email — if lost, see below).
+   - **Order exists, license exists** → email delivery issue. Check Resend logs.
+     The plaintext key was only in the original email — if lost, see below.
    - **No order** → the webhook didn't arrive/verify. Go to step 3.
 3. In Lemon Squeezy → Webhooks, inspect recent deliveries for
    `/api/webhook/lemonsqueezy`.

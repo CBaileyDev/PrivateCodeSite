@@ -6,28 +6,12 @@ import { Menu, X } from "lucide-react";
 import { Logo } from "@/components/site/logo";
 import { buttonVariants } from "@/components/ui/button";
 import { mainNav } from "@/lib/constants";
-import { cn } from "@/lib/utils";
 
 export function SiteHeader() {
   const [open, setOpen] = React.useState(false);
-  const [scrolled, setScrolled] = React.useState(false);
-
-  React.useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   return (
-    <header
-      className={cn(
-        "sticky top-0 z-50 w-full border-b transition-colors",
-        scrolled
-          ? "border-border bg-background/80 backdrop-blur-xl"
-          : "border-transparent bg-transparent",
-      )}
-    >
+    <header className="border-border bg-background/95 sticky top-0 z-50 w-full border-b">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link href="/" aria-label="PrivateCode home" className="z-10">
           <Logo />
@@ -46,12 +30,6 @@ export function SiteHeader() {
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
-          <Link
-            href="/dashboard"
-            className={buttonVariants({ variant: "ghost", size: "sm" })}
-          >
-            Portal
-          </Link>
           <Link
             href="/#pricing"
             className={buttonVariants({ variant: "primary", size: "sm" })}
@@ -72,7 +50,7 @@ export function SiteHeader() {
       </div>
 
       {open && (
-        <div className="border-border bg-background/95 border-t backdrop-blur-xl md:hidden">
+        <div className="border-border bg-background border-t md:hidden">
           <nav className="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-4">
             {mainNav.map((item) => (
               <Link
@@ -85,13 +63,6 @@ export function SiteHeader() {
               </Link>
             ))}
             <div className="mt-2 flex flex-col gap-2">
-              <Link
-                href="/dashboard"
-                onClick={() => setOpen(false)}
-                className={buttonVariants({ variant: "secondary" })}
-              >
-                License Portal
-              </Link>
               <Link
                 href="/#pricing"
                 onClick={() => setOpen(false)}

@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CircleCheck, Download, KeyRound, Mail } from "lucide-react";
+import {
+  CircleCheck,
+  Download,
+  KeyRound,
+  Mail,
+  MessageCircle,
+} from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { PageShell } from "@/components/site/page-shell";
 import { siteConfig } from "@/lib/constants";
@@ -83,10 +89,11 @@ export default async function CheckoutSuccessPage({
           Download PrivateCode
         </Link>
         <Link
-          href="/dashboard"
+          href="/support"
           className={buttonVariants({ variant: "secondary" })}
         >
-          Open license portal
+          <MessageCircle />
+          Contact support
         </Link>
       </div>
 

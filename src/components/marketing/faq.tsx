@@ -1,12 +1,11 @@
 import { ChevronDown } from "lucide-react";
-import { Reveal } from "@/components/ui/reveal";
 import { faqs } from "@/lib/constants";
 
 export function Faq() {
   return (
     <section id="faq" className="relative scroll-mt-20 py-24">
       <div className="mx-auto max-w-3xl px-4 sm:px-6">
-        <Reveal className="mx-auto max-w-2xl text-center">
+        <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
             Frequently asked questions
           </h2>
@@ -17,11 +16,11 @@ export function Faq() {
             </a>
             .
           </p>
-        </Reveal>
+        </div>
 
         <div className="mt-12 space-y-3">
-          {faqs.map((faq, i) => (
-            <Reveal key={faq.q} delay={i * 40}>
+          {faqs.map((faq) => (
+            <div key={faq.q}>
               <details className="group border-border bg-card rounded-xl border px-5 [&_summary::-webkit-details-marker]:hidden">
                 <summary className="text-foreground flex cursor-pointer list-none items-center justify-between gap-4 py-4 text-left text-base font-medium">
                   {faq.q}
@@ -31,7 +30,7 @@ export function Faq() {
                   {faq.a}
                 </p>
               </details>
-            </Reveal>
+            </div>
           ))}
         </div>
       </div>

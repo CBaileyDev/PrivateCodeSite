@@ -35,12 +35,16 @@ export function ContactForm() {
   });
 
   async function onSubmit(values: ContactInput) {
-    const result = await submitContact(values);
-    if (result.ok) {
-      toast.success("Message sent — we’ll get back to you soon.");
-      reset();
-    } else {
-      toast.error(result.error ?? "Something went wrong. Please try again.");
+    try {
+      const result = await submitContact(values);
+      if (result.ok) {
+        toast.success("Message sent — we’ll get back to you soon.");
+        reset();
+      } else {
+        toast.error(result.error ?? "Something went wrong. Please try again.");
+      }
+    } catch {
+      toast.error("Something went wrong. Please try again.");
     }
   }
 

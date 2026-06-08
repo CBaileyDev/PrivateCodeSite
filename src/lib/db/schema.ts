@@ -18,8 +18,6 @@ export const users = pgTable(
       .primaryKey()
       .default(sql`gen_random_uuid()`),
     email: text("email").notNull(),
-    // Optional link to a Supabase auth user (for the portal).
-    authUserId: uuid("auth_user_id"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -95,6 +93,33 @@ export const licenses = pgTable(
   (t) => [uniqueIndex("licenses_key_hash_unique").on(t.keyHash)],
 );
 
+/** One row per activated machine fingerprint for a license. */
+export const licenseActivations = pgTable(
+  "license_activations",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    licenseId: uuid("license_id")
+      .notNull()
+      .references(() => licenses.id, { onDelete: "cascade" }),
+    instanceId: text("instance_id").notNull(),
+    instanceName: text("instance_name"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    lastSeenAt: timestamp("last_seen_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("license_activations_license_instance_unique").on(
+      t.licenseId,
+      t.instanceId,
+    ),
+  ],
+);
+
 /** Append-only audit log of every webhook we receive, for idempotency + forensics. */
 export const webhookEvents = pgTable(
   "webhook_events",
@@ -127,5 +152,7 @@ export type Order = typeof orders.$inferSelect;
 export type NewOrder = typeof orders.$inferInsert;
 export type License = typeof licenses.$inferSelect;
 export type NewLicense = typeof licenses.$inferInsert;
+export type LicenseActivation = typeof licenseActivations.$inferSelect;
+export type NewLicenseActivation = typeof licenseActivations.$inferInsert;
 export type WebhookEvent = typeof webhookEvents.$inferSelect;
 export type NewWebhookEvent = typeof webhookEvents.$inferInsert;

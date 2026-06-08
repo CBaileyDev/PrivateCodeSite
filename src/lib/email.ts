@@ -1,6 +1,6 @@
 import "server-only";
 import { Resend } from "resend";
-import { env, features, publicEnv } from "@/lib/env";
+import { env, features } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { siteConfig } from "@/lib/constants";
 import { formatCurrency } from "@/lib/utils";
@@ -72,16 +72,14 @@ export async function sendLicenseEmail(args: {
   amountCents: number;
   currency: string;
 }): Promise<SendResult> {
-  const portal = `${publicEnv.NEXT_PUBLIC_APP_URL}/dashboard`;
   const download = `${siteConfig.repo}/releases/latest`;
   const html = layout(
     "Your PrivateCode license 🎉",
     `<p style="margin:0 0 16px;line-height:1.6;">Thanks for your purchase! Your lifetime license is ready. Paste this key into PrivateCode to activate.</p>
      <div style="background:#0d0f1a;color:#e7e9f3;font-family:ui-monospace,monospace;font-size:16px;letter-spacing:1px;padding:16px;border-radius:10px;text-align:center;margin:0 0 20px;">${args.licenseKey}</div>
      <p style="margin:0 0 8px;color:#6a6a80;font-size:13px;">Amount paid: ${formatCurrency(args.amountCents, args.currency)}</p>
-     <p style="margin:0 0 24px;color:#6a6a80;font-size:13px;">Keep this key safe — we store it only as a one-way hash and cannot recover the plaintext. You can always re-download builds from your portal.</p>
-     <p style="margin:0 0 12px;">${button(download, "Download PrivateCode")}</p>
-     <p style="margin:0;font-size:13px;"><a href="${portal}" style="color:#5b3df5;">Open your license portal →</a></p>`,
+     <p style="margin:0 0 24px;color:#6a6a80;font-size:13px;">Keep this key safe — we store it only as a one-way hash and cannot recover the plaintext.</p>
+     <p style="margin:0;">${button(download, "Download PrivateCode")}</p>`,
   );
   const text = `Your PrivateCode license
 
@@ -89,7 +87,6 @@ License key: ${args.licenseKey}
 Amount paid: ${formatCurrency(args.amountCents, args.currency)}
 
 Download: ${download}
-Portal: ${portal}
 
 Keep this key safe — we store only a one-way hash and cannot recover it.`;
   return send({

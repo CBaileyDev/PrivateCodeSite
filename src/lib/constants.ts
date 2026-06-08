@@ -42,14 +42,11 @@ export const footerNav = {
   product: [
     { title: "Features", href: "/#features" },
     { title: "Pricing", href: "/#pricing" },
-    { title: "Download", href: "/#pricing" },
-    { title: "Changelog", href: siteConfig.repo + "/releases" },
+    { title: "GitHub", href: siteConfig.repo },
   ],
   support: [
     { title: "Support", href: "/support" },
     { title: "FAQ", href: "/#faq" },
-    { title: "License Portal", href: "/dashboard" },
-    { title: "Repository", href: siteConfig.repo },
   ],
   legal: [
     { title: "Terms of Service", href: "/legal/terms" },
@@ -65,7 +62,7 @@ export const faqs = [
   },
   {
     q: "What does the license cover?",
-    a: "A one-time purchase grants a lifetime license for PrivateCode across the terminal TUI, desktop GUI, and headless daemon, plus 12 months of updates. The license is delivered instantly by email and can be re-downloaded any time from your license portal.",
+    a: "A one-time purchase grants a lifetime license for PrivateCode across the terminal TUI, desktop GUI, and headless daemon, plus 12 months of updates. The license key is delivered instantly by email; keep that email because we never store the plaintext key.",
   },
   {
     q: "Which platforms are supported?",

@@ -1,4 +1,4 @@
-import { features } from "@/lib/env";
+import { env, features } from "@/lib/env";
 import { error, json } from "@/lib/http";
 import { logger } from "@/lib/logger";
 import { extractOrder, verifyWebhookSignature } from "@/lib/lemonsqueezy";
@@ -18,6 +18,10 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const PROVIDER = "lemonsqueezy";
+
+function isConfiguredVariant(variantId: string | null): boolean {
+  return variantId === String(env.LEMONSQUEEZY_VARIANT_ID);
+}
 
 export async function POST(request: Request) {
   // 1. Read the RAW body first — signature verification depends on the exact bytes.
@@ -57,16 +61,19 @@ export async function POST(request: Request) {
 
   // 4. Idempotency: record the event; bail if we've already seen it.
   try {
-    const { firstSeen } = await recordWebhookEvent({
+    const { firstSeen, processed } = await recordWebhookEvent({
       provider: PROVIDER,
       eventId,
       eventName,
       signatureValid: true,
       payload,
     });
-    if (!firstSeen) {
+    if (!firstSeen && processed) {
       logger.info("Duplicate webhook ignored", { eventId });
       return json({ received: true, duplicate: true });
+    }
+    if (!firstSeen) {
+      logger.info("Retrying previously unprocessed webhook", { eventId });
     }
   } catch (err) {
     logger.error("Failed to record webhook event", {
@@ -81,6 +88,18 @@ export async function POST(request: Request) {
     switch (eventName) {
       case "order_created": {
         const o = extractOrder(payload);
+        if (!isConfiguredVariant(o.variantId)) {
+          logger.warn("Ignoring order for unconfigured variant", {
+            eventId,
+            variantId: o.variantId,
+          });
+          await markWebhookProcessed(PROVIDER, eventId);
+          return json({
+            received: true,
+            ignored: true,
+            reason: "variant_mismatch",
+          });
+        }
         if (o.refunded) {
           // A created-but-already-refunded edge case.
           await refundOrder(PROVIDER, o.providerOrderId);
@@ -119,6 +138,18 @@ export async function POST(request: Request) {
 
       case "order_refunded": {
         const o = extractOrder(payload);
+        if (!isConfiguredVariant(o.variantId)) {
+          logger.warn("Ignoring refund for unconfigured variant", {
+            eventId,
+            variantId: o.variantId,
+          });
+          await markWebhookProcessed(PROVIDER, eventId);
+          return json({
+            received: true,
+            ignored: true,
+            reason: "variant_mismatch",
+          });
+        }
         const found = await refundOrder(PROVIDER, o.providerOrderId);
         if (found && o.email) {
           await sendRefundEmail({ to: o.email, orderId: o.providerOrderId });

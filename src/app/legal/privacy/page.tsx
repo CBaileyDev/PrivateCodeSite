@@ -47,10 +47,6 @@ export default function PrivacyPage() {
             your card details.
           </li>
           <li>
-            <strong>Account data:</strong> if you use the license portal, your
-            email and authentication session.
-          </li>
-          <li>
             <strong>Analytics:</strong> privacy-respecting, aggregate usage
             metrics for this website (e.g. page performance). No cross-site
             tracking.
@@ -83,7 +79,7 @@ export default function PrivacyPage() {
         <h2>Sub-processors</h2>
         <ul>
           <li>Lemon Squeezy — payments &amp; billing</li>
-          <li>Supabase — database &amp; authentication</li>
+          <li>Supabase — Postgres database hosting</li>
           <li>Resend — transactional email</li>
           <li>Vercel — hosting &amp; analytics</li>
         </ul>

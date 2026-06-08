@@ -15,7 +15,6 @@ export function GET() {
       payments: features.lemonSqueezy,
       webhooks: features.lemonSqueezyWebhook,
       email: features.resend,
-      auth: features.supabase,
       rateLimit: features.rateLimit,
     },
   });

@@ -22,13 +22,12 @@ export class LemonSqueezyError extends Error {
 export async function createCheckout(params: {
   email?: string;
   redirectUrl: string;
-  variantId?: string;
 }): Promise<{ url: string }> {
   if (!features.lemonSqueezy) {
     throw new LemonSqueezyError("Lemon Squeezy is not configured", 503);
   }
 
-  const variantId = params.variantId || env.LEMONSQUEEZY_VARIANT_ID!;
+  const variantId = env.LEMONSQUEEZY_VARIANT_ID!;
 
   const body = {
     data: {
@@ -40,7 +39,7 @@ export async function createCheckout(params: {
         },
         product_options: {
           redirect_url: params.redirectUrl,
-          receipt_button_text: "Open license portal",
+          receipt_button_text: "Download PrivateCode",
           enabled_variants: [Number(variantId)],
         },
         checkout_options: { embed: false, dark: true },

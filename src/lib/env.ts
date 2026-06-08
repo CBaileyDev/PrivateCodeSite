@@ -29,9 +29,6 @@ const serverSchema = z.object({
   // Database (Supabase Postgres connection string).
   DATABASE_URL: stringMin().optional(),
 
-  // Supabase (auth + storage).
-  SUPABASE_SERVICE_ROLE_KEY: stringMin().optional(),
-
   // Lemon Squeezy payments.
   LEMONSQUEEZY_API_KEY: stringMin().optional(),
   LEMONSQUEEZY_STORE_ID: stringMin().optional(),
@@ -62,8 +59,6 @@ const clientSchema = z.object({
     .url()
     .default("http://localhost:3000")
     .transform((v) => v.replace(/\/$/, "")),
-  NEXT_PUBLIC_SUPABASE_URL: z.string().url().optional(),
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().trim().min(1).optional(),
 });
 
 function format(error: z.ZodError): string {
@@ -72,8 +67,23 @@ function format(error: z.ZodError): string {
     .join("\n");
 }
 
+function cleanEnv(raw: NodeJS.ProcessEnv) {
+  // Treat blank strings (from .env files with FOO=) as absent so that
+  // "cp .env.example .env.local" + leaving optionals empty just works,
+  // matching the documented "runs without secrets" behavior.
+  const out: Record<string, string | undefined> = {};
+  for (const [k, v] of Object.entries(raw)) {
+    if (v != null) {
+      const t = String(v).trim();
+      out[k] = t === "" ? undefined : t;
+    }
+  }
+  return out;
+}
+
 function parseServer() {
-  const parsed = serverSchema.safeParse(process.env);
+  const cleaned = cleanEnv(process.env);
+  const parsed = serverSchema.safeParse(cleaned);
   if (!parsed.success) {
     // Invalid (not just missing) values are a hard failure.
     throw new Error(
@@ -85,10 +95,9 @@ function parseServer() {
 
 function parseClient() {
   // Client vars must be referenced statically for Next.js inlining.
+  const cleaned = cleanEnv(process.env);
   const parsed = clientSchema.safeParse({
-    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
-    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    NEXT_PUBLIC_APP_URL: cleaned.NEXT_PUBLIC_APP_URL,
   });
   if (!parsed.success) {
     throw new Error(
@@ -104,13 +113,6 @@ export const publicEnv = parseClient();
 /** Capability flags — used to branch on whether an integration is wired up. */
 export const features = {
   database: Boolean(env.DATABASE_URL),
-  supabase: Boolean(
-    publicEnv.NEXT_PUBLIC_SUPABASE_URL &&
-    publicEnv.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  ),
-  supabaseAdmin: Boolean(
-    publicEnv.NEXT_PUBLIC_SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY,
-  ),
   lemonSqueezy: Boolean(
     env.LEMONSQUEEZY_API_KEY &&
     env.LEMONSQUEEZY_STORE_ID &&

@@ -1,7 +1,8 @@
 import "server-only";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import {
+  licenseActivations,
   licenses,
   orders,
   users,
@@ -121,6 +122,9 @@ export async function refundOrder(
       )
       .limit(1);
     if (!found[0]) return false;
+    if (found[0].status === (partial ? "partial_refund" : "refunded")) {
+      return false;
+    }
 
     await tx
       .update(orders)
@@ -140,20 +144,6 @@ export async function refundOrder(
   });
 }
 
-/** Orders + licenses for a customer's portal, newest first. */
-export async function getOrdersForEmail(email: string) {
-  const db = getDb();
-  return db
-    .select({
-      order: orders,
-      license: licenses,
-    })
-    .from(orders)
-    .leftJoin(licenses, eq(licenses.orderId, orders.id))
-    .where(eq(sql`lower(${orders.email})`, email.toLowerCase()))
-    .orderBy(desc(orders.createdAt));
-}
-
 /** Look up an active license by its stored hash (for validation). */
 export async function findLicenseByHash(keyHash: string) {
   const db = getDb();
@@ -165,6 +155,98 @@ export async function findLicenseByHash(keyHash: string) {
   return rows[0] ?? null;
 }
 
+export type LicenseActivationResult =
+  | {
+      valid: true;
+      license: License;
+    }
+  | {
+      valid: false;
+      reason:
+        | "not_found"
+        | "revoked"
+        | "refunded"
+        | "expired"
+        | "activation_limit";
+    };
+
+/** Validate a license and atomically claim/reuse a machine activation. */
+export async function activateLicenseByHash(input: {
+  keyHash: string;
+  instanceId: string;
+  instanceName?: string;
+}): Promise<LicenseActivationResult> {
+  const db = getDb();
+  return db.transaction(async (tx) => {
+    const license = (
+      await tx
+        .select()
+        .from(licenses)
+        .where(eq(licenses.keyHash, input.keyHash))
+        .limit(1)
+        .for("update")
+    )[0];
+
+    if (!license) return { valid: false, reason: "not_found" };
+    if (license.status !== "active") {
+      return {
+        valid: false,
+        reason: license.status === "refunded" ? "refunded" : "revoked",
+      };
+    }
+    if (license.expiresAt && license.expiresAt.getTime() < Date.now()) {
+      return { valid: false, reason: "expired" };
+    }
+
+    const existingActivation = (
+      await tx
+        .select()
+        .from(licenseActivations)
+        .where(
+          and(
+            eq(licenseActivations.licenseId, license.id),
+            eq(licenseActivations.instanceId, input.instanceId),
+          ),
+        )
+        .limit(1)
+    )[0];
+
+    if (existingActivation) {
+      await tx
+        .update(licenseActivations)
+        .set({
+          instanceName: input.instanceName ?? existingActivation.instanceName,
+          lastSeenAt: new Date(),
+        })
+        .where(eq(licenseActivations.id, existingActivation.id));
+      return { valid: true, license };
+    }
+
+    if (license.activations >= license.activationLimit) {
+      return { valid: false, reason: "activation_limit" };
+    }
+
+    await tx.insert(licenseActivations).values({
+      licenseId: license.id,
+      instanceId: input.instanceId,
+      instanceName: input.instanceName ?? null,
+    });
+
+    const updatedLicense = (
+      await tx
+        .update(licenses)
+        .set({
+          activations: sql`${licenses.activations} + 1`,
+          updatedAt: new Date(),
+        })
+        .where(eq(licenses.id, license.id))
+        .returning()
+    )[0]!;
+
+    return { valid: true, license: updatedLicense };
+  });
+}
+
 /** Record a received webhook for audit + idempotency. Returns false if the
  *  (provider, eventId) pair was already seen. */
 export async function recordWebhookEvent(input: {
@@ -173,7 +255,7 @@ export async function recordWebhookEvent(input: {
   eventName: string;
   signatureValid: boolean;
   payload: unknown;
-}): Promise<{ firstSeen: boolean }> {
+}): Promise<{ firstSeen: boolean; processed: boolean; error: string | null }> {
   const db = getDb();
   const res = await db
     .insert(webhookEvents)
@@ -188,7 +270,29 @@ export async function recordWebhookEvent(input: {
       target: [webhookEvents.provider, webhookEvents.eventId],
     })
     .returning({ id: webhookEvents.id });
-  return { firstSeen: res.length > 0 };
+  if (res.length > 0) {
+    return { firstSeen: true, processed: false, error: null };
+  }
+
+  const existing = await db
+    .select({
+      processed: webhookEvents.processed,
+      error: webhookEvents.error,
+    })
+    .from(webhookEvents)
+    .where(
+      and(
+        eq(webhookEvents.provider, input.provider),
+        eq(webhookEvents.eventId, input.eventId),
+      ),
+    )
+    .limit(1);
+
+  return {
+    firstSeen: false,
+    processed: existing[0]?.processed ?? true,
+    error: existing[0]?.error ?? null,
+  };
 }
 
 /** Mark a previously-recorded webhook event processed (or errored). */

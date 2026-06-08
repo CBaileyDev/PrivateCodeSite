@@ -1,5 +1,4 @@
 import { Check, Minus } from "lucide-react";
-import { Reveal } from "@/components/ui/reveal";
 import { cn } from "@/lib/utils";
 
 type Row = {
@@ -63,7 +62,7 @@ export function Comparison() {
   return (
     <section className="relative py-24">
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
-        <Reveal className="mx-auto max-w-2xl text-center">
+        <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
             How PrivateCode compares
           </h2>
@@ -71,10 +70,10 @@ export function Comparison() {
             The performance and privacy of a native tool, without the tradeoffs
             of a heavyweight GUI.
           </p>
-        </Reveal>
+        </div>
 
-        <Reveal className="border-border mt-12 overflow-hidden rounded-2xl border">
-          <table className="w-full border-collapse text-left">
+        <div className="border-border mt-12 overflow-x-auto rounded-2xl border">
+          <table className="w-full min-w-[640px] border-collapse text-left">
             <thead>
               <tr className="border-border bg-background-subtle border-b">
                 <th className="text-muted-foreground px-5 py-4 text-sm font-medium">
@@ -110,7 +109,7 @@ export function Comparison() {
               ))}
             </tbody>
           </table>
-        </Reveal>
+        </div>
       </div>
     </section>
   );

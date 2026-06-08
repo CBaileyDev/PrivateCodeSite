@@ -5,6 +5,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Toaster } from "sonner";
 import { SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
+import { shouldEnableVercelInsights } from "@/lib/analytics";
 import { siteConfig } from "@/lib/constants";
 import "./globals.css";
 
@@ -71,6 +72,8 @@ export const viewport: Viewport = {
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const showVercelInsights = shouldEnableVercelInsights(process.env.VERCEL);
+
   return (
     <html
       lang="en"
@@ -92,8 +95,12 @@ export default function RootLayout({
             },
           }}
         />
-        <Analytics />
-        <SpeedInsights />
+        {showVercelInsights ? (
+          <>
+            <Analytics />
+            <SpeedInsights />
+          </>
+        ) : null}
       </body>
     </html>
   );

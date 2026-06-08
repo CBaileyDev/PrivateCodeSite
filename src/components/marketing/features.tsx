@@ -7,7 +7,6 @@ import {
   WifiOff,
   type LucideIcon,
 } from "lucide-react";
-import { Reveal } from "@/components/ui/reveal";
 
 type Feature = {
   icon: LucideIcon;
@@ -58,7 +57,7 @@ export function Features() {
   return (
     <section id="features" className="relative scroll-mt-20 py-24">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <Reveal className="mx-auto max-w-2xl text-center">
+        <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
             Built for speed you can feel
           </h2>
@@ -66,14 +65,12 @@ export function Features() {
             Every interaction is engineered to be instant, private, and
             keyboard-native — without the bloat of an Electron app.
           </p>
-        </Reveal>
+        </div>
 
         <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {featureList.map((feature, i) => (
-            <Reveal
-              as="article"
+          {featureList.map((feature) => (
+            <article
               key={feature.title}
-              delay={i * 60}
               className="group border-border bg-card hover:border-primary/40 rounded-2xl border p-6 transition-colors"
             >
               <div className="bg-primary/10 text-primary ring-primary/20 flex size-11 items-center justify-center rounded-xl ring-1 transition-transform group-hover:scale-105">
@@ -83,7 +80,7 @@ export function Features() {
               <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
                 {feature.description}
               </p>
-            </Reveal>
+            </article>
           ))}
         </div>
       </div>

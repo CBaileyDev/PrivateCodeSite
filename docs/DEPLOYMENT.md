@@ -5,13 +5,13 @@ build settings required.
 
 ## 1. Provision services
 
-| Service       | You need                                                       |
-| ------------- | -------------------------------------------------------------- |
-| Supabase      | Project URL, anon key, service-role key, pooled `DATABASE_URL` |
-| Lemon Squeezy | API key, store id, variant id, webhook signing secret          |
-| Resend        | API key + verified sending domain (`EMAIL_FROM`)               |
-| Upstash       | Redis REST URL + token                                         |
-| Vercel        | Project linked to this repo                                    |
+| Service       | You need                                              |
+| ------------- | ----------------------------------------------------- |
+| Supabase      | Pooled Postgres `DATABASE_URL`                        |
+| Lemon Squeezy | API key, store id, variant id, webhook signing secret |
+| Resend        | API key + verified sending domain (`EMAIL_FROM`)      |
+| Upstash       | Redis REST URL + token                                |
+| Vercel        | Project linked to this repo                           |
 
 ## 2. Database
 
@@ -30,7 +30,7 @@ for **Production**, **Preview**, and **Development**. Critical:
 - `LICENSE_HASH_SECRET` → `openssl rand -hex 32` (production refuses the dev
   fallback). **Keep this stable** — changing it invalidates all stored license
   hashes.
-- Never expose `SUPABASE_SERVICE_ROLE_KEY` / `LEMONSQUEEZY_API_KEY` to the client.
+- Never expose `DATABASE_URL` / `LEMONSQUEEZY_API_KEY` to the client.
 
 ## 4. Lemon Squeezy webhook
 
@@ -49,7 +49,7 @@ automatic).
 
 - `GET /api/health` shows all integrations `true`.
 - Test-mode purchase delivers a license email and populates the DB.
-- `GET /api/license/validate?key=...` returns `{ valid: true }` for that key.
+- `GET /api/license/validate?key=...&instanceId=test-machine` returns `{ valid: true }` for that key.
 - Security headers present (`curl -I https://<domain>`).
 - `robots.txt` / `sitemap.xml` resolve.
 
@@ -67,4 +67,3 @@ to be up to date.
 - **Product analytics** (PostHog/Plausible) if you want funnels beyond Vercel
   Analytics.
 - **Playwright** E2E for the purchase flow; **Storybook** for components.
-- A dedicated **admin dashboard** (refunds already auto-process via webhook).

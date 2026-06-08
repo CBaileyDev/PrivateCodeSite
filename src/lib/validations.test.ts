@@ -52,6 +52,11 @@ describe("checkoutSchema", () => {
     expect(checkoutSchema.safeParse({ email: "a@b.com" }).success).toBe(true);
     expect(checkoutSchema.safeParse({ email: "bad" }).success).toBe(false);
   });
+  it("rejects client-controlled product variants", () => {
+    expect(
+      checkoutSchema.safeParse({ variantId: "cheaper-variant" }).success,
+    ).toBe(false);
+  });
 });
 
 describe("licenseValidateSchema", () => {
@@ -60,8 +65,24 @@ describe("licenseValidateSchema", () => {
       false,
     );
     expect(
-      licenseValidateSchema.safeParse({ key: "PVTC-ABCDE-FGHJK-MNPQR-STVWX" })
-        .success,
+      licenseValidateSchema.safeParse({
+        key: "PVTC-ABCDE-FGHJK-MNPQR-STVWX",
+        instanceId: "machine-a",
+      }).success,
+    ).toBe(true);
+  });
+
+  it("requires an instance id to enforce activation limits", () => {
+    expect(
+      licenseValidateSchema.safeParse({
+        key: "PVTC-ABCDE-FGHJK-MNPQR-STVWX",
+      }).success,
+    ).toBe(false);
+    expect(
+      licenseValidateSchema.safeParse({
+        key: "PVTC-ABCDE-FGHJK-MNPQR-STVWX",
+        instanceId: "machine-a",
+      }).success,
     ).toBe(true);
   });
 });

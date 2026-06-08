@@ -2,8 +2,8 @@
 
 Production-grade marketing and commerce site for
 [PrivateCode](https://github.com/CBaileyDev/PrivateCode) — the native, instant,
-local-first AI coding agent. Built to take real payments, deliver licenses, and
-manage customers.
+local-first AI coding agent. Built to take real payments and deliver license
+keys by email.
 
 > **Migration note.** This repo previously contained a single placeholder
 > `index.html` (a one-line stub pointing at an artifact that wasn't in the
@@ -13,19 +13,18 @@ manage customers.
 
 ## Stack
 
-| Concern    | Choice                                                 |
-| ---------- | ------------------------------------------------------ |
-| Framework  | **Next.js 16** (App Router, RSC, Server Actions) + TS  |
-| Styling    | Tailwind CSS v4 + shadcn-style components              |
-| Payments   | **Lemon Squeezy** hosted checkout + signed webhooks    |
-| Database   | **Supabase** Postgres via **Drizzle ORM** (+ RLS)      |
-| Auth       | **Supabase Auth** (magic-link) for the customer portal |
-| Email      | **Resend** (license delivery, refunds, support)        |
-| Rate limit | **Upstash** Redis (sliding window, graceful fallback)  |
-| Analytics  | Vercel Analytics + Speed Insights                      |
-| Forms      | React Hook Form + Zod                                  |
-| Tests      | Vitest                                                 |
-| Hosting    | Vercel                                                 |
+| Concern    | Choice                                                |
+| ---------- | ----------------------------------------------------- |
+| Framework  | **Next.js 16** (App Router, RSC, Server Actions) + TS |
+| Styling    | Tailwind CSS v4 + shadcn-style components             |
+| Payments   | **Lemon Squeezy** hosted checkout + signed webhooks   |
+| Database   | **Supabase** Postgres via **Drizzle ORM** (+ RLS)     |
+| Email      | **Resend** (license delivery, refunds, support)       |
+| Rate limit | **Upstash** Redis (sliding window, graceful fallback) |
+| Analytics  | Vercel Analytics + Speed Insights                     |
+| Forms      | React Hook Form + Zod                                 |
+| Tests      | Vitest                                                |
+| Hosting    | Vercel                                                |
 
 > The spec called for "Next.js 15". `create-next-app@latest` now provisions
 > **Next.js 16**, the current stable major (App Router, Server Actions, React
@@ -36,7 +35,7 @@ manage customers.
 
 Every third-party integration is **optional and validated**. With no `.env`
 configured the site still builds, type-checks, and renders — checkout, email,
-DB, auth, and rate limiting degrade gracefully (see `src/lib/env.ts` and
+DB, email, and rate limiting degrade gracefully (see `src/lib/env.ts` and
 `/api/health`). Wire up credentials to switch each capability on.
 
 ## Quick start
@@ -72,19 +71,15 @@ src/
     loading|error|not-found.tsx  Boundaries
     sitemap|robots|manifest.ts   SEO / PWA
     checkout/success|cancel/     Post-payment pages
-    dashboard/                   Customer license portal (auth-gated)
-    login/                       Magic-link sign in
     support/                     Contact form + server action
     legal/{terms,privacy,refund} Compliance pages
-    auth/callback/               Supabase code exchange
     api/
       checkout/                  Create Lemon Squeezy checkout (CSRF + rate-limited)
       webhook/lemonsqueezy/      Signed webhook → license + email
       license/validate/          Desktop-app license validation (CORS)
-      orders/                    Customer order history (protected)
       health/                    Uptime probe
   components/
-    ui/                          Button, Card, Input, Badge, Reveal, …
+    ui/                          Button, Card, Input, Badge, …
     marketing/                   Hero, Features, Pricing, Comparison, FAQ, …
     site/                        Header, Footer, Logo, PageShell
   lib/
@@ -95,7 +90,6 @@ src/
     rate-limit.ts                Upstash limiter (+ fallback)
     validations.ts               Zod schemas
     db/                          Drizzle schema, client, queries
-    supabase/                    Server / browser / admin clients
 drizzle/                         Generated SQL migrations
 supabase/rls.sql                 Row Level Security policies
 docs/                            SECURITY, DEPLOYMENT, RUNBOOK
@@ -122,11 +116,9 @@ npm run db:migrate                      # create tables
 psql "$DATABASE_URL" -f supabase/rls.sql # apply Row Level Security
 ```
 
-### Email (Resend) & Auth (Supabase)
+### Email (Resend)
 
-Set `RESEND_API_KEY` + verified `EMAIL_FROM`. For the portal, set
-`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and (server-only)
-`SUPABASE_SERVICE_ROLE_KEY`. **Always** generate a strong
+Set `RESEND_API_KEY` + verified `EMAIL_FROM`. **Always** generate a strong
 `LICENSE_HASH_SECRET` (`openssl rand -hex 32`) — required in production.
 
 ## Purchase → fulfillment flow
@@ -140,7 +132,7 @@ Customer clicks "Get PrivateCode"
       • dedupe via webhook_events (idempotent)
       • generate license key, store ONLY its HMAC hash + a masked display form
       • email the plaintext key via Resend (shown exactly once)
-  → customer lands on /checkout/success and can sign into /dashboard
+  → customer lands on /checkout/success and checks email for their key
 Desktop app validates keys via GET /api/license/validate.
 ```
 
@@ -152,20 +144,19 @@ Zod validation on every endpoint, CSRF (same-origin) checks on state changes,
 webhook signature verification, license keys stored hashed, RLS in Supabase,
 rate limiting, and secrets only ever read from the environment.
 
-## What's done vs. what needs your accounts
+## What's done vs. what needs your services
 
 **Implemented & verified (builds, type-checks, tests, runs):** the full
 marketing site, checkout API, signed webhook + idempotent fulfillment, license
-generation/validation, email templates, customer portal, auth, support form,
+generation/validation, email templates, support form,
 legal pages, security headers, rate limiting, SEO, DB schema + migrations + RLS,
 unit/integration tests, and CI.
 
 **Needs external setup (no code changes required):** real Lemon Squeezy /
-Supabase / Resend / Upstash credentials, running the DB migration + RLS, Vercel
+Supabase Postgres / Resend / Upstash credentials, running the DB migration + RLS, Vercel
 project + custom domain, and optional Sentry. See
 [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md).
 
 **Intentionally left as follow-ups** (to avoid over-engineering a one-time
-product): a full admin dashboard (refunds are already automated via webhook),
-Storybook, PostHog/Plausible, and Playwright E2E — all noted in the deployment
-doc.
+product): Storybook, PostHog/Plausible, and Playwright E2E — all noted in the
+deployment doc.

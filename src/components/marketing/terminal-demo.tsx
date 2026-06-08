@@ -34,7 +34,7 @@ const lines: Line[] = [
 
 export function TerminalDemo() {
   return (
-    <div className="border-border bg-card shadow-primary/5 mx-auto max-w-3xl overflow-hidden rounded-2xl border shadow-2xl">
+    <div className="border-border bg-card shadow-primary/5 mx-auto max-w-3xl overflow-hidden rounded-2xl border shadow-lg">
       <div className="border-border bg-background-subtle flex items-center gap-2 border-b px-4 py-3">
         <span className="size-3 rounded-full bg-[#ff5f57]" />
         <span className="size-3 rounded-full bg-[#febc2e]" />
@@ -46,11 +46,7 @@ export function TerminalDemo() {
       <pre className="overflow-x-auto p-5 font-mono text-[13px] leading-relaxed sm:text-sm">
         <code className="block">
           {lines.map((line, i) => (
-            <span
-              key={i}
-              className={cn("animate-fade-up block", line.className)}
-              style={{ animationDelay: `${i * 110}ms` }}
-            >
+            <span key={i} className={cn("block", line.className)}>
               {line.text === "" ? " " : line.text}
             </span>
           ))}

@@ -8,7 +8,7 @@ Set globally in [`next.config.ts`](../next.config.ts) for every route:
 
 - **Content-Security-Policy** — `default-src 'self'`, `object-src 'none'`,
   `frame-ancestors 'none'`, `base-uri 'self'`, scoped `connect-src`/`frame-src`
-  for Supabase / Lemon Squeezy / Upstash / Vercel, and `upgrade-insecure-requests`.
+  for Lemon Squeezy / Upstash / Vercel, and `upgrade-insecure-requests`.
 - **Strict-Transport-Security** — 2 years, `includeSubDomains; preload`.
 - **X-Frame-Options: DENY**, **X-Content-Type-Options: nosniff**,
   **Referrer-Policy: strict-origin-when-cross-origin**,
@@ -19,9 +19,9 @@ HTTPS is enforced by the host (Vercel) and `upgrade-insecure-requests`.
 
 > The CSP is static so marketing pages stay statically rendered / ISR-friendly,
 > which requires `'unsafe-inline'` on script/style for React's streaming
-> payloads. For a strict **nonce-based** CSP, move the policy into the proxy
-> (`src/proxy.ts`) and emit a per-request nonce — at the cost of static
-> rendering. The current trade-off favors Core Web Vitals.
+> payloads. For a strict **nonce-based** CSP, move the policy into a proxy and
+> emit a per-request nonce — at the cost of static rendering. The current
+> trade-off favors Core Web Vitals.
 
 ## Input validation & sanitization
 
@@ -52,15 +52,14 @@ constant-time. The plaintext is shown exactly once (purchase email).
 
 ## Database / RLS
 
-Row Level Security is enabled on all tables (`supabase/rls.sql`),
-default-deny, with read-only policies scoped to the signed-in user's email.
-`webhook_events` is readable only by the service role. All writes go through
-trusted server code using the service role / pooled connection.
+Row Level Security is enabled on operational tables (`supabase/rls.sql`) as
+defense in depth. The browser never receives database credentials; all reads and
+writes go through trusted server code using the pooled connection.
 
 ## Rate limiting
 
 Upstash sliding-window limits on `/api/checkout`, `/api/license/validate`,
-`/api/orders`, and the contact action (`src/lib/rate-limit.ts`). Without
+and the contact action (`src/lib/rate-limit.ts`). Without
 Upstash it fails open in dev and logs a single warning in production — put a
 WAF/edge limit (Vercel/Cloudflare) in front for defense in depth.
 

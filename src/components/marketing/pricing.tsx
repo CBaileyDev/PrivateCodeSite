@@ -1,6 +1,5 @@
 import { Check, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Reveal } from "@/components/ui/reveal";
 import { CheckoutButton } from "@/components/checkout-button";
 import { pricing } from "@/lib/constants";
 import { formatCurrency } from "@/lib/utils";
@@ -9,22 +8,22 @@ export function Pricing() {
   return (
     <section id="pricing" className="relative scroll-mt-20 py-24">
       <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="bg-primary/10 absolute top-1/2 left-1/2 h-[360px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[140px]" />
+        <div className="from-primary/10 absolute top-1/2 left-1/2 h-72 w-[560px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-radial opacity-70" />
       </div>
 
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <Reveal className="mx-auto max-w-2xl text-center">
+        <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
             One price. Yours forever.
           </h2>
           <p className="text-muted-foreground mt-4 text-lg">
             No subscriptions, no seats, no upsells. Buy once and own it.
           </p>
-        </Reveal>
+        </div>
 
-        <Reveal className="mx-auto mt-12 max-w-md">
-          <div className="border-primary/30 bg-card shadow-primary/10 relative overflow-hidden rounded-3xl border p-8 shadow-2xl">
-            <div className="bg-primary/10 absolute top-0 right-0 size-40 rounded-full blur-3xl" />
+        <div className="mx-auto mt-12 max-w-md">
+          <div className="border-primary/30 bg-card shadow-primary/10 relative overflow-hidden rounded-3xl border p-8 shadow-lg">
+            <div className="bg-primary/10 absolute top-0 right-0 size-36 rounded-full" />
 
             <div className="relative">
               <div className="flex items-center justify-between">
@@ -65,7 +64,7 @@ export function Pricing() {
               </ul>
             </div>
           </div>
-        </Reveal>
+        </div>
       </div>
     </section>
   );

@@ -40,7 +40,6 @@ export async function POST(request: Request) {
   try {
     const { url } = await createCheckout({
       email: parsed.data.email,
-      variantId: parsed.data.variantId,
       redirectUrl: `${publicEnv.NEXT_PUBLIC_APP_URL}/checkout/success`,
     });
     return json({ url }, { headers: rateLimitHeaders(rl) });

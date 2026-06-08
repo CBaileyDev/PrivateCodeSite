@@ -3,7 +3,7 @@ import { json } from "@/lib/http";
 import { getClientIp, rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { licenseValidateSchema } from "@/lib/validations";
 import { hashLicenseKey } from "@/lib/license";
-import { findLicenseByHash } from "@/lib/db/queries";
+import { activateLicenseByHash } from "@/lib/db/queries";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -51,23 +51,22 @@ export async function GET(request: Request) {
     );
   }
 
-  const license = await findLicenseByHash(hashLicenseKey(parsed.data.key));
-  if (!license) {
-    return json({ valid: false, reason: "not_found" }, { headers: CORS });
-  }
-  if (license.status !== "active") {
-    return json({ valid: false, reason: license.status }, { headers: CORS });
-  }
-  if (license.expiresAt && license.expiresAt.getTime() < Date.now()) {
-    return json({ valid: false, reason: "expired" }, { headers: CORS });
+  const result = await activateLicenseByHash({
+    keyHash: hashLicenseKey(parsed.data.key),
+    instanceId: parsed.data.instanceId,
+    instanceName: parsed.data.instanceName,
+  });
+  if (!result.valid) {
+    return json({ valid: false, reason: result.reason }, { headers: CORS });
   }
 
   return json(
     {
       valid: true,
-      status: license.status,
-      expiresAt: license.expiresAt,
-      activationLimit: license.activationLimit,
+      status: result.license.status,
+      expiresAt: result.license.expiresAt,
+      activationLimit: result.license.activationLimit,
+      activations: result.license.activations,
     },
     { headers: CORS },
   );

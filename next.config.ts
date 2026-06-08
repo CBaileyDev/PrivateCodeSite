@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+const isDevelopment = process.env.NODE_ENV === "development";
+
 /**
  * Content-Security-Policy.
  *
@@ -15,11 +17,11 @@ const csp = [
   "base-uri 'self'",
   "object-src 'none'",
   "frame-ancestors 'none'",
-  "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com",
+  `script-src 'self' 'unsafe-inline'${isDevelopment ? " 'unsafe-eval'" : ""} https://va.vercel-scripts.com`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  "connect-src 'self' https://*.supabase.co https://*.lemonsqueezy.com https://*.upstash.io https://va.vercel-scripts.com https://vitals.vercel-insights.com",
+  "connect-src 'self' https://*.lemonsqueezy.com https://*.upstash.io https://va.vercel-scripts.com https://vitals.vercel-insights.com",
   "frame-src 'self' https://*.lemonsqueezy.com",
   "form-action 'self' https://*.lemonsqueezy.com",
   "manifest-src 'self'",

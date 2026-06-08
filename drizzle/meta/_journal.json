@@ -8,6 +8,20 @@
       "when": 1780843857891,
       "tag": "0000_vengeful_skin",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1780878214905,
+      "tag": "0001_perfect_marauders",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1780881979560,
+      "tag": "0002_fat_nightcrawler",
+      "breakpoints": true
     }
   ]
 }

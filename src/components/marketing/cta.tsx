@@ -1,13 +1,12 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
-import { Reveal } from "@/components/ui/reveal";
 
 export function Cta() {
   return (
     <section className="relative py-24">
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
-        <Reveal className="border-border from-primary-muted via-card to-background-subtle relative overflow-hidden rounded-3xl border bg-gradient-to-br px-8 py-16 text-center">
+        <div className="border-border from-primary-muted via-card to-background-subtle relative overflow-hidden rounded-3xl border bg-gradient-to-br px-8 py-16 text-center">
           <div className="bg-grid pointer-events-none absolute inset-0 opacity-40" />
           <div className="relative">
             <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
@@ -33,7 +32,7 @@ export function Cta() {
               </Link>
             </div>
           </div>
-        </Reveal>
+        </div>
       </div>
     </section>
   );
