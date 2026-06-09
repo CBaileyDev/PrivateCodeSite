@@ -4,8 +4,8 @@ Quick triage for the most common production issues.
 
 ## A customer didn't receive their license email
 
-1. `GET /api/health` → confirm `payments`, `webhooks`, `email`, `database` are
-   `true`.
+1. `GET /api/health` with `Authorization: Bearer $ADMIN_API_KEY` → confirm
+   `payments`, `webhooks`, `email`, `database` are `true`.
 2. In the DB, look for the order: `select * from orders where email = '...'`.
    - **Order exists, license exists** → email delivery issue. Check Resend logs.
      The plaintext key was only in the original email — if lost, see below.

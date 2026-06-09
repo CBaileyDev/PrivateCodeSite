@@ -30,7 +30,7 @@ vi.mock("@/lib/db/queries", () => ({
   findLicenseByHash: mocks.findLicenseByHash,
 }));
 
-import { GET } from "@/app/api/license/validate/route";
+import { GET, POST } from "@/app/api/license/validate/route";
 
 const key = "PVTC-ABCDE-FGHJK-MNPQR-STVWX";
 
@@ -80,5 +80,45 @@ describe("license validation route", () => {
       valid: false,
       reason: "activation_limit",
     });
+  });
+
+  it("accepts the key via POST body so it never appears in a URL", async () => {
+    mocks.activateLicenseByHash.mockResolvedValue({
+      valid: true,
+      license: {
+        status: "active",
+        expiresAt: null,
+        activationLimit: 3,
+        activations: 1,
+      },
+    });
+
+    const response = await POST(
+      new Request("http://localhost/api/license/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key, instanceId: "machine-a" }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mocks.activateLicenseByHash).toHaveBeenCalledWith({
+      keyHash: "license-hash",
+      instanceId: "machine-a",
+      instanceName: undefined,
+    });
+    await expect(response.json()).resolves.toMatchObject({ valid: true });
+  });
+
+  it("rejects a malformed POST body", async () => {
+    const response = await POST(
+      new Request("http://localhost/api/license/validate", {
+        method: "POST",
+        body: "not json",
+      }),
+    );
+
+    expect(response.status).toBe(422);
+    expect(mocks.activateLicenseByHash).not.toHaveBeenCalled();
   });
 });
