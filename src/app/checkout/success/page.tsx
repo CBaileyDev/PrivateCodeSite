@@ -22,8 +22,13 @@ export default async function CheckoutSuccessPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
+  // Only echo provider-shaped order ids — anything else in the query string
+  // is attacker-controlled text we should not render on a trusted page.
   const orderRef =
-    typeof params.order_id === "string" ? params.order_id : undefined;
+    typeof params.order_id === "string" &&
+    /^[A-Za-z0-9_-]{1,64}$/.test(params.order_id)
+      ? params.order_id
+      : undefined;
 
   return (
     <PageShell className="max-w-2xl">

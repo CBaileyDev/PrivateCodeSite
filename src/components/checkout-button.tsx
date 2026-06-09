@@ -42,14 +42,16 @@ export function CheckoutButton({
           data.error ??
             "We couldn't start checkout right now. Please try again shortly.",
         );
+        setLoading(false);
         return;
       }
 
-      // Hand off to the hosted checkout.
+      // Hand off to the hosted checkout. Deliberately stay in the loading
+      // state — re-enabling the button mid-navigation invites double clicks
+      // that create duplicate checkout sessions.
       window.location.assign(data.url);
     } catch {
       toast.error("Network error starting checkout. Please try again.");
-    } finally {
       setLoading(false);
     }
   }

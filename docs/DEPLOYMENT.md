@@ -47,9 +47,12 @@ automatic).
 
 ## 6. Post-deploy checks
 
-- `GET /api/health` shows all integrations `true`.
+- `GET /api/health` with `Authorization: Bearer $ADMIN_API_KEY` shows all
+  integrations `true` (unauthenticated requests get a bare `status: ok`).
 - Test-mode purchase delivers a license email and populates the DB.
-- `GET /api/license/validate?key=...&instanceId=test-machine` returns `{ valid: true }` for that key.
+- `POST /api/license/validate` with `{"key": "...", "instanceId": "test-machine"}`
+  returns `{ valid: true }` for that key (GET with query params also works for
+  older app builds).
 - Security headers present (`curl -I https://<domain>`).
 - `robots.txt` / `sitemap.xml` resolve.
 

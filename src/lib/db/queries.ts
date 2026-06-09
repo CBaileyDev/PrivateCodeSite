@@ -16,15 +16,26 @@ async function upsertUserByEmail(
   tx: Awaited<ReturnType<typeof getDb>>,
   email: string,
 ) {
-  const existing = await tx
-    .select()
-    .from(users)
-    .where(eq(sql`lower(${users.email})`, email.toLowerCase()))
-    .limit(1);
+  const find = () =>
+    tx
+      .select()
+      .from(users)
+      .where(eq(sql`lower(${users.email})`, email.toLowerCase()))
+      .limit(1);
+
+  const existing = await find();
   if (existing[0]) return existing[0];
 
-  const inserted = await tx.insert(users).values({ email }).returning();
-  return inserted[0]!;
+  // Conflict-safe insert: two webhooks for the same buyer can race here, and
+  // the unique lower(email) index would otherwise abort one transaction.
+  const inserted = await tx
+    .insert(users)
+    .values({ email })
+    .onConflictDoNothing()
+    .returning();
+  if (inserted[0]) return inserted[0];
+
+  return (await find())[0]!;
 }
 
 export type FulfilledOrder = { order: Order; license: License; isNew: boolean };

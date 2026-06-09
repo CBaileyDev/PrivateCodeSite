@@ -1,5 +1,5 @@
 import { features } from "@/lib/env";
-import { json } from "@/lib/http";
+import { json, readJson } from "@/lib/http";
 import { getClientIp, rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { licenseValidateSchema } from "@/lib/validations";
 import { hashLicenseKey } from "@/lib/license";
@@ -9,10 +9,12 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // This endpoint is called by the native desktop app, so it is intentionally
-// CORS-open for reads. It never returns the key or any PII.
+// CORS-open. It never returns the key or any PII. POST (key in the body) is
+// the preferred transport — GET is kept for older app builds, but puts the
+// key in the query string where proxies/access logs may capture it.
 const CORS = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type",
   "Access-Control-Max-Age": "86400",
 };
@@ -21,7 +23,10 @@ export function OPTIONS() {
   return new Response(null, { status: 204, headers: CORS });
 }
 
-export async function GET(request: Request) {
+async function handleValidate(
+  request: Request,
+  input: unknown,
+): Promise<Response> {
   const ip = getClientIp(request);
   const rl = await rateLimit(ip, { name: "license", max: 60, window: "60 s" });
   if (!rl.success) {
@@ -31,12 +36,7 @@ export async function GET(request: Request) {
     );
   }
 
-  const { searchParams } = new URL(request.url);
-  const parsed = licenseValidateSchema.safeParse({
-    key: searchParams.get("key") ?? "",
-    instanceId: searchParams.get("instanceId") ?? undefined,
-    instanceName: searchParams.get("instanceName") ?? undefined,
-  });
+  const parsed = licenseValidateSchema.safeParse(input);
   if (!parsed.success) {
     return json(
       { valid: false, reason: "invalid_request" },
@@ -70,4 +70,18 @@ export async function GET(request: Request) {
     },
     { headers: CORS },
   );
+}
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  return handleValidate(request, {
+    key: searchParams.get("key") ?? "",
+    instanceId: searchParams.get("instanceId") ?? undefined,
+    instanceName: searchParams.get("instanceName") ?? undefined,
+  });
+}
+
+export async function POST(request: Request) {
+  const body = await readJson(request);
+  return handleValidate(request, body ?? {});
 }
